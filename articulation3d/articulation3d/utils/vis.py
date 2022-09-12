@@ -59,7 +59,7 @@ def precompute_K_inv_dot_xy_1(h=480, w=640):
         return K_inv_dot_xy_1
 
 
-def project2D(pcd,h=480,w=640,focal_length=517.97):
+def project2D(pcd,h=480,w=640,focal_length=368.635):
     #pcd is Nx3
     offset_x = w/2
     offset_y = h/2
@@ -74,8 +74,6 @@ def project2D(pcd,h=480,w=640,focal_length=517.97):
         proj = proj[:,:2] / proj[:,2][:,None]
         return proj 
 
-
-
     #proj is Nx2
     proj = (np.array(K)@(pcd.T)).T
     proj = proj[:,:2] / proj[:,2][:,None]
@@ -83,7 +81,7 @@ def project2D(pcd,h=480,w=640,focal_length=517.97):
 
 
     
-def get_pcd(verts, normal, offset, h=480, w=640, focal_length=517.97):
+def get_pcd(verts, normal, offset, h=480, w=640, focal_length=368.635):
     """
     convert 2d verts to 3d point cloud based on plane normal and offset
     depth = offset / n \dot K^{-1}q
@@ -95,10 +93,10 @@ def get_pcd(verts, normal, offset, h=480, w=640, focal_length=517.97):
         [0, 0, 1]]
     K_inv = np.linalg.inv(np.array(K))
     homogeneous = np.hstack((verts, np.ones(len(verts)).reshape(-1,1)))
+
     ray = K_inv@homogeneous.T
     depth = offset / np.dot(normal, ray)
     pcd = depth.reshape(-1,1) * ray.T
-    #pdb.set_trace()
     return pcd
 
 
@@ -151,7 +149,7 @@ def get_single_image_mesh_plane(plane_params, segmentations, img_file, height=48
     for planeI,(segm, normal, offset) in enumerate(zip(poly_segmentations, norms, offsets)):
         if len(segm) == 0:
             continue
-
+        
         #####DF#####
         I = np.array(imageio.imread(img_file))
         #####DF#####
@@ -298,7 +296,7 @@ def get_single_image_mesh_arti(plane_params, segmentations, img, height=480, wid
         #####DF#####
         #pick an arbitrary point
         # get 3d pointcloud
-        tmp_pcd = get_pcd(tmp_verts, normal, offset, focal_length)  
+        tmp_pcd = get_pcd(tmp_verts, normal, offset, focal_length = focal_length)  
         point0 = tmp_pcd[0,:]
         #pick the furthest point from here
         dPoint0 = np.sum((tmp_pcd-point0[np.newaxis,:])**2,axis=1)
@@ -312,7 +310,7 @@ def get_single_image_mesh_arti(plane_params, segmentations, img, height=480, wid
         #control points in 3D 
         control3D = [point0, point0+dir1, point0+dir2, point0+dir1+dir2]
         control3D = np.vstack([p[None,:] for p in control3D])
-        control3DProject = project2D(control3D, focal_length)
+        control3DProject = project2D(control3D, focal_length = focal_length)
 
         #pick an arbitrary square
         targetSize = 300
@@ -394,7 +392,7 @@ def get_single_image_mesh_arti(plane_params, segmentations, img, height=480, wid
 
 
 """
-def get_single_image_mesh_plane(plane_params, segmentations, img_file, height=480, width=640, focal_length=517.97, webvis=False, reduce_size=True):
+def get_single_image_mesh_plane(plane_params, segmentations, img_file, height=480, width=640, focal_length=368.635, webvis=False, reduce_size=True):
     plane_params = np.array(plane_params)
     offsets = np.linalg.norm(plane_params, ord=2, axis=1)
     norms = plane_params / offsets.reshape(-1,1)
@@ -536,7 +534,7 @@ def get_single_image_mesh_plane(plane_params, segmentations, img_file, height=48
 """
 
 
-def get_single_image_mesh(plane_params, segmentations, img_file, height=480, width=640, focal_length=517.97, webvis=False, reduce_size=True):
+def get_single_image_mesh(plane_params, segmentations, img_file, height=480, width=640, focal_length=368.635, webvis=False, reduce_size=True):
     plane_params = np.array(plane_params)
     offsets = np.linalg.norm(plane_params, ord=2, axis=1)
     norms = plane_params/offsets.reshape(-1,1)
